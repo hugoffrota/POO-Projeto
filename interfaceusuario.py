@@ -34,33 +34,34 @@ class InterfaceUsuario:
     def parar_programa(self):
         self.ativo = False
         
+    @staticmethod
+    def _valida_titulo_tarefa(answers, current):
+        if not current:
+            raise inquirer.error.ValidationError("Insira um título para a tarefa!", reason="Insira um título para a tarefa!")
+        return True
 
+    @staticmethod   
+    def _valida_prazo_tarefa(answers, current):
+        if current:
+            try:
+                prazo = datetime.strptime(current, '%d/%m/%Y')
+            except:
+                raise inquirer.error.ValidationError("Insira uma data válida", reason="Insira uma data válida")
+        return True
+    
+    @staticmethod
+    def _valida_status_tarefa(answers, current):
+        if not current.lower() in ['pendente', 'concluída', 'concluida', '']:
+            raise inquirer.error.ValidationError("Insira um status válido", reason="Insira um status válido")
+        return True
 
     def adicionar_tarefa(self):
 
-        def _valida_titulo_tarefa(answers, current):
-            if not current:
-                raise inquirer.error.ValidationError("Insira um título para a tarefa!", reason="Insira um título para a tarefa!")
-            return True
-        
-        def _valida_prazo_tarefa(answers, current):
-            if current:
-                try:
-                    prazo = datetime.strptime(current, '%d/%m/%Y')
-                except:
-                    raise inquirer.error.ValidationError("Insira uma data válida", reason="Insira uma data válida")
-            return True
-        
-        def _valida_status_tarefa(answers, current):
-            if not current.lower() in ['pendente', 'concluída', 'concluida', '']:
-                raise inquirer.error.ValidationError("Insira um status válido", reason="Insira um status válido")
-            return True
-        
         questoes = [
-            inquirer.Text("titulo", message="Insira o título da tarefa", validate=_valida_titulo_tarefa),
-            inquirer.Text("prazo", message="Qual o prazo de realização da tarefa {titulo}? (DD/MM/AAAA) (Opcional)", validate=_valida_prazo_tarefa),
+            inquirer.Text("titulo", message="Insira o título da tarefa", validate=InterfaceUsuario._valida_titulo_tarefa),
+            inquirer.Text("prazo", message="Qual o prazo de realização da tarefa {titulo}? (DD/MM/AAAA) (Opcional)", validate=InterfaceUsuario._valida_prazo_tarefa),
             inquirer.Text("categoria", message="Qual a categoria da tarefa? (Opcional)"),
-            inquirer.Text("status", message="Qual o status da tarefa? ([pendente]/concluida)", validate=_valida_status_tarefa)
+            inquirer.Text("status", message="Qual o status da tarefa? ([pendente]/concluida)", validate=InterfaceUsuario._valida_status_tarefa)
         ]
 
         print("ADICIONAR TAREFA\n")
@@ -74,10 +75,10 @@ class InterfaceUsuario:
             status=dados['status'].lower() if dados['status'] else 'pendente'
         )
         
-        self._clear()
+        InterfaceUsuario._clear()
 
     def menu_principal(self):
-        self._clear()
+        InterfaceUsuario._clear()
         opcoes = [
             inquirer.List(
                 "comando",
@@ -143,16 +144,9 @@ class InterfaceUsuario:
             self.api.excluir_tarefa(tarefa[0])
 
     def visualizar_tarefas_data(self):
-        def _valida_prazo_tarefa(answers, current):
-            if current:
-                try:
-                    prazo = datetime.strptime(current, '%d/%m/%Y')
-                except:
-                    raise inquirer.error.ValidationError("Insira uma data válida", reason="Insira uma data válida")
-            return True
         
         questoes = [
-            inquirer.Text("data", message="De qual dia você deseja visualizar as tarefas? (DD/MM/AAAA) (Opcional)", validate=_valida_prazo_tarefa),
+            inquirer.Text("data", message="De qual dia você deseja visualizar as tarefas? (DD/MM/AAAA) (Opcional)", validate=InterfaceUsuario._valida_prazo_tarefa),
         ]
 
         print("VISUALIZAR TAREFAS\n")
@@ -161,6 +155,7 @@ class InterfaceUsuario:
     
         tarefas = self.api.buscar_tarefas(dados['data'])
         print("Dia:", dados['data'] if dados['data'] else "Não especificado")
+        print("\n")
         for tarefa in tarefas:
             print("Título:", tarefa[0])
             print("Categoria:", tarefa[2] if tarefa[2] else "Sem categoria")
